@@ -33,7 +33,7 @@ Process* schedule_fcfs(Queue *ready_queue, int now) {
     return dequeue(ready_queue);
 }
 
-Process* schedule_sjf(Queue *ready_queue, int now) {
+Process* schedule_npsjf(Queue *ready_queue, int now) {
     Node *cur = ready_queue->front;
     Node *best_prev = NULL, *best = cur;
     int min = cur->proc->burst_time;
