@@ -38,7 +38,8 @@ Process* schedule_npsjf(Queue *ready_queue, int now) {
     Node *best_prev = NULL, *best = cur;
     int min = cur->proc->burst_time;
 
-    while (cur->next) {
+    while (cur != NULL) {
+        //找出時間為now時ready_queue中burst_time最小的Node
         if (cur->next->proc->burst_time < min) {
             min = cur->next->proc->burst_time;
             best_prev = cur;
@@ -47,17 +48,16 @@ Process* schedule_npsjf(Queue *ready_queue, int now) {
         cur = cur->next;
     }
 
-    // 從 queue 裡移除 best
-    if (best_prev) {
-        best_prev->next = best->next;
+    // 把best 放到queue 中front 的位置
+    //best不在queue裡front的位置
+    if (best != ready_queue->front) {
         if (ready_queue->rear == best) ready_queue->rear = best_prev;
-    } else {
-        ready_queue->front = best->next;
-        if (best == ready_queue->rear) ready_queue->rear = best->next;
+        best_prev->next = best->next;
+        best->next = ready_queue->front;
+        ready_queue->front = best;
     }
 
-    best->next = NULL;
-    return best->proc;
+    return dequeue(ready_queue);
 }
 
 Process* schedule_rr(Queue *ready_queue, int now) {
@@ -106,7 +106,7 @@ int main() {
 
     scheduler_func scheduler;
     if (option == 1) scheduler = schedule_fcfs;
-    else if (option == 2) scheduler = schedule_sjf;
+    else if (option == 2) scheduler = schedule_npsjf;
     else scheduler = schedule_rr;
 
     simulate(&job_queue, scheduler);
