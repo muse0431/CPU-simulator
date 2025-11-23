@@ -56,19 +56,22 @@ void enqueue(Queue *q, Process *p){
 
 Process* dequeue(Queue *q){
 
-    if(is_empty(q))
-        return NULL;
-        
-    else{
+    if(is_empty(q)) return NULL;
+    
+    Node *temp = NULL;
+    Process *item = NULL;
+    temp = q->front;
+    item = q->front->proc;
 
-        Queue *temp = NULL;
-        temp = q->front;
-
+    if(q->front == q->rear){
         q->front = q->front->next;
-        free(q->front);
-
-        return q->front->proc;
-
+        q->rear = NULL;
+        free(temp);
+        return item;
+    }else{
+        q->front = q->front->next;
+        free(temp);
+        return item;
     }
 
 }
