@@ -139,9 +139,10 @@ void simulate(Queue *job_queue, scheduler_func scheduler) {
             running->remaining_time--;
             if (running->remaining_time == 0) {
                 running->finish_time = now + 1;
+                time_quantum=20;
                 running = NULL; // process done
             }
-            else if(scheduler==schedule_rr){
+            if(scheduler==schedule_rr&&running!=NULL){
                 time_quantum--;
                 if(time_quantum==0){
                     Process* temp=running;
