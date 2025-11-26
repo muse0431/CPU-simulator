@@ -6,7 +6,7 @@ typedef struct Process {
     int arrival_time;   // 何時進入系統
     int burst_time;     // 需要多少 CPU 時間
     int remaining_time; // RR, Preemptive SJF 用
-    int priority;       // 若有 Priority Scheduling
+    int response_time;
     int start_time;
     int finish_time;
     int waiting_time;
@@ -156,11 +156,56 @@ void simulate(Queue *job_queue, scheduler_func scheduler) {
         now++;
     }
 }
+Process *createpro(){
+    Process *temp = malloc(sizeof(Process));
+    temp->pid = 0;
+    temp->arrival_time = 0;
+    temp->burst_time = 0;
+    temp->finish_time = 0;
+    temp->remaining_time = 0;
+    temp->response_time = -1;
+    temp->start_time = 0;
+    temp->turnaround_time = 0;
+    temp->waiting_time = 0;
+    return temp;
+}
+
+void load_processes_from_file(Queue *job){
+    char file[10];
+    
+    FILE *fp = NULL;
+   
+    
+    while(fp == NULL){
+        printf("enter file name:");
+        scanf("%s", file);
+        fp = fopen(file, "r");
+        if(fp == NULL){
+            printf("can't opne the file, please enter again\n");
+        }else{
+            break;
+        }
+        
+    }
+     Process *n = createpro();
+    int id = 1;
+
+    while(fscanf(fp, "%d %d", &(n->arrival_time), &(n->burst_time)) != EOF){
+        n->pid = id;
+        enqueue(job , n);
+        id++;
+        n = createpro();
+        fscanf(fp, "%d %d", &(n->arrival_time), &(n->burst_time));
+    }
+    return;
+}
 
 int main() {
-    Queue job_queue = {0};
+    Queue *job_queue = malloc(sizeof(Queue));
+    job_queue->front = NULL;
+    job_queue->rear = NULL;
 
-    load_processes_from_file("input.txt", &job_queue);
+    load_processes_from_file(job_queue);
 
     printf("Choose algorithm: 1=FCFS, 2=SJF, 3=RR\n");
     int option;
@@ -171,7 +216,7 @@ int main() {
     else if (option == 2) scheduler = schedule_npsjf;
     else scheduler = schedule_rr;
 
-    simulate(&job_queue, scheduler);
+    simulate(job_queue, scheduler);
 
     return 0;
 }
