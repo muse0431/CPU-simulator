@@ -91,7 +91,8 @@ Process *createpro(){
     return temp;
 }
 
-typedef Process* (*scheduler_func)(Queue_LL *ready_queue, int now);
+typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
+typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue, int now);
 
 Process* schedule_fcfs_LL(Queue_LL *ready_queue, int now) {
     return dequeue_LL(ready_queue);
@@ -126,11 +127,19 @@ Process* schedule_npsjf_LL(Queue_LL *ready_queue, int now) {
     return dequeue_LL(ready_queue);
 }
 
-Process* schedule_rr(Queue_LL *ready_queue, int now) {
+Process* schedule_rr_LL(Queue_LL *ready_queue, int now) {
     return dequeue_LL(ready_queue);
 }
 
-void simulate(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func scheduler) {
+Process* schedule_psjf_LL(Queue_LL *ready_queue, int now){
+    return dequeue_LL(ready_queue);
+}
+
+Process* schedule_rr_Array(Queue_Array *ready_queue, int now){
+    return dequeue_Array(ready_queue);
+}
+
+void simulate_LL(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func_LL scheduler) {
     
     int now = 0;
     int time_quantum = 20;//for rr scheduler
@@ -161,12 +170,57 @@ void simulate(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func schedul
                 time_quantum = 20;
                 running = NULL; // process done
             }
-            if(scheduler == schedule_rr && running !=NULL){
+            if(scheduler == schedule_rr_LL && running !=NULL){
                 time_quantum--;
                 if(time_quantum==0){
                     Process* temp=running;
                     running = NULL;
                     enqueue_LL(ready_queue,temp);
+                    time_quantum=20;
+                }
+            }
+        }
+        now++;
+    }
+}
+
+void simulate_Array(Queue_Array *job_queue, Queue_Array *ready_queue, scheduler_func_LL scheduler) {
+    
+    int now = 0;
+    int time_quantum = 20;//for rr scheduler
+    Process *running = NULL;
+
+    while (!is_empty_Array(job_queue) || !is_empty_Array(ready_queue) || running != NULL) {
+
+        // 1. 有 arrival 的 process -> ready queue
+        while (!is_empty_Array(job_queue) && job_queue->front->arrival_time <= now) {
+            enqueue_Array(ready_queue, dequeue_Array(job_queue));
+        }
+
+        // 2. 若 CPU idle，從 scheduler 選一個 process
+        if (running == NULL && !is_empty_Array(ready_queue)) {
+            running = scheduler(ready_queue, now);
+            if(running->start_time == -1){
+                running->start_time = now;
+                running->waiting_time = now - running->arrival_time;
+                ready_queue->memo->waiting_time = ready_queue->memo->waiting_time + running->waiting_time;
+            }
+        }
+
+        // 3. 執行 1 單位時間
+        if (running != NULL) {
+            running->remaining_time--;
+            if (running->remaining_time == 0) {
+                running->finish_time = now + 1;
+                time_quantum = 20;
+                running = NULL; // process done
+            }
+            if(scheduler == schedule_rr_Array && running !=NULL){
+                time_quantum--;
+                if(time_quantum==0){
+                    Process* temp=running;
+                    running = NULL;
+                    enqueue_Array(ready_queue,temp);
                     time_quantum=20;
                 }
             }
@@ -188,7 +242,7 @@ void load_processes_from_file(Queue_LL *job){
             break;
         }
     }
-     Process *n = createpro();
+    Process *n = createpro();
     int id = 1;
 
     while(fscanf(fp, "%d %d", &(n->arrival_time), &(n->burst_time)) != EOF){
@@ -218,12 +272,15 @@ int main() {
     int option;
     scanf("%d", &option);
 
-    scheduler_func scheduler;
-    if (option == 1) scheduler = schedule_fcfs_LL;
-    else if (option == 2) scheduler = schedule_npsjf_LL;
-    else scheduler = schedule_rr;
+    scheduler_func_LL scheduler_LL;
+    scheduler_func_Array scheduler_Array;
+    if (option == 1) scheduler_LL = schedule_fcfs_LL;
+    else if (option == 2) scheduler_LL = schedule_npsjf_LL;
+    else if (option == 3) scheduler_LL = schedule_rr_LL;
+    else if (option == 4) scheduler_LL = schedule_psjf_LL;
+    else if (option == 7) scheduler_Array = schedule_rr_Array;
 
-    simulate(job_queue, ready_queue, scheduler);
+    simulate_LL(job_queue, ready_queue, scheduler_LL);
 
     printf("toltal waiting time: %d\n",ready_queue->memo->waiting_time);
     return 0;
