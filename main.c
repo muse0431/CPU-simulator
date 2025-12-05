@@ -13,18 +13,24 @@ typedef struct Process {
     int turnaround_time;
 } Process;
 
-typedef struct Node {
+typedef struct node {
     Process *proc;
-    struct Node *next;
+    struct node *next;
 } Node;
 
-typedef struct Queue {
+typedef struct queue {
     Node *front;
     Process *memo;
     Node *rear;
-} Queue;
+} Queue_LL;
 
-int is_empty(Queue *q){
+typedef struct queuearray{
+    Process *front;
+    Process *memo;
+    Process *rear;
+}Queue_Array;
+
+int is_empty_LL(Queue_LL *q){
 
     if(q->front == NULL)
         return 1;
@@ -34,13 +40,13 @@ int is_empty(Queue *q){
 
 }
 
-void enqueue(Queue *q, Process *p){
+void enqueue_LL(Queue_LL *q, Process *p){
 
     Node *node = (Node *)malloc(sizeof(Node));
     node->proc = p;
     node->next = NULL;
 
-    if(is_empty(q)){
+    if(is_empty_LL(q)){
         q->front = node;
         q->rear = node;
     }else{
@@ -49,9 +55,9 @@ void enqueue(Queue *q, Process *p){
     }
 }
 
-Process* dequeue(Queue *q){
+Process* dequeue_LL(Queue_LL *q){
 
-    if(is_empty(q)) return NULL;
+    if(is_empty_LL(q)) return NULL;
     
     Node *temp = NULL;
     Process *item = NULL;
@@ -85,14 +91,14 @@ Process *createpro(){
     return temp;
 }
 
-typedef Process* (*scheduler_func)(Queue *ready_queue, int now);
+typedef Process* (*scheduler_func)(Queue_LL *ready_queue, int now);
 
-Process* schedule_fcfs(Queue *ready_queue, int now) {
-    return dequeue(ready_queue);
+Process* schedule_fcfs_LL(Queue_LL *ready_queue, int now) {
+    return dequeue_LL(ready_queue);
 }
 
-Process* schedule_npsjf(Queue *ready_queue, int now) {
-    if(is_empty(ready_queue)) return NULL;
+Process* schedule_npsjf_LL(Queue_LL *ready_queue, int now) {
+    if(is_empty_LL(ready_queue)) return NULL;
 
     Node *cur = ready_queue->front;
     Node *best_prev = NULL, *prev = NULL, *best = cur;
@@ -117,28 +123,28 @@ Process* schedule_npsjf(Queue *ready_queue, int now) {
         best->next = ready_queue->front;
         ready_queue->front = best;
     }
-    return dequeue(ready_queue);
+    return dequeue_LL(ready_queue);
 }
 
-Process* schedule_rr(Queue *ready_queue, int now) {
-    return dequeue(ready_queue);
+Process* schedule_rr(Queue_LL *ready_queue, int now) {
+    return dequeue_LL(ready_queue);
 }
 
-void simulate(Queue *job_queue, Queue *ready_queue, scheduler_func scheduler) {
+void simulate(Queue_LL *job_queue, Queue_LL *ready_queue, scheduler_func scheduler) {
     
     int now = 0;
     int time_quantum = 20;//for rr scheduler
     Process *running = NULL;
 
-    while (!is_empty(job_queue) || !is_empty(ready_queue) || running != NULL) {
+    while (!is_empty_LL(job_queue) || !is_empty_LL(ready_queue) || running != NULL) {
 
         // 1. 有 arrival 的 process -> ready queue
-        while (!is_empty(job_queue) && job_queue->front->proc->arrival_time <= now) {
-            enqueue(ready_queue, dequeue(job_queue));
+        while (!is_empty_LL(job_queue) && job_queue->front->proc->arrival_time <= now) {
+            enqueue_LL(ready_queue, dequeue_LL(job_queue));
         }
 
         // 2. 若 CPU idle，從 scheduler 選一個 process
-        if (running == NULL && !is_empty(ready_queue)) {
+        if (running == NULL && !is_empty_LL(ready_queue)) {
             running = scheduler(ready_queue, now);
             if(running->start_time == -1){
                 running->start_time = now;
@@ -160,7 +166,7 @@ void simulate(Queue *job_queue, Queue *ready_queue, scheduler_func scheduler) {
                 if(time_quantum==0){
                     Process* temp=running;
                     running = NULL;
-                    enqueue(ready_queue,temp);
+                    enqueue_LL(ready_queue,temp);
                     time_quantum=20;
                 }
             }
@@ -169,7 +175,7 @@ void simulate(Queue *job_queue, Queue *ready_queue, scheduler_func scheduler) {
     }
 }
 
-void load_processes_from_file(Queue *job){
+void load_processes_from_file(Queue_LL *job){
     char file[10];
     FILE *fp = NULL;
     while(fp == NULL){
@@ -188,7 +194,7 @@ void load_processes_from_file(Queue *job){
     while(fscanf(fp, "%d %d", &(n->arrival_time), &(n->burst_time)) != EOF){
         n->pid = id;
         n->remaining_time = n->burst_time;
-        enqueue(job , n);
+        enqueue_LL(job , n);
         id++;
         n = createpro();
     }
@@ -196,12 +202,12 @@ void load_processes_from_file(Queue *job){
 }
 
 int main() {
-    Queue *job_queue = malloc(sizeof(Queue));
+    Queue_LL *job_queue = malloc(sizeof(Queue_LL));
     job_queue->front = NULL;
     job_queue->rear = NULL;
     job_queue->memo = NULL;
 
-    Queue *ready_queue = malloc(sizeof(Queue));
+    Queue_LL *ready_queue = malloc(sizeof(Queue_LL));
     ready_queue->front = NULL;
     ready_queue->rear = NULL;
     ready_queue->memo = createpro();
@@ -213,12 +219,12 @@ int main() {
     scanf("%d", &option);
 
     scheduler_func scheduler;
-    if (option == 1) scheduler = schedule_fcfs;
-    else if (option == 2) scheduler = schedule_npsjf;
+    if (option == 1) scheduler = schedule_fcfs_LL;
+    else if (option == 2) scheduler = schedule_npsjf_LL;
     else scheduler = schedule_rr;
 
     simulate(job_queue, ready_queue, scheduler);
 
-    printf("toltal waiting time: %d",ready_queue->memo->waiting_time);
+    printf("toltal waiting time: %d\n",ready_queue->memo->waiting_time);
     return 0;
 }
