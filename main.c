@@ -165,6 +165,48 @@ Process *createpro(){
     return temp;
 }
 
+/*void arrcopy(Process *des, Process *sour){
+
+}
+
+void shiftArray(Queue_Array *ready_queue, int target){
+    Process temp;
+    arrcopy(&temp, &(ready_queue->Data[target]));
+    for(int i = target; i<=ready_queue->front; i++){
+        arrcopy(&(ready_queue->Data[i]), &(ready_queue->Data[i-1]))
+    }
+    arrcopy()
+}*/
+
+Process* schedule_npsjf_Array(Queue_Array *ready_queue, int now) {
+    if(is_empty_Array(ready_queue)) return NULL;
+    int cur = ready_queue->front;
+
+    int best_prev = 0, prev = 0, best = cur, c = 0;
+    int min = ready_queue->Data[cur].burst_time;
+
+    for(int c=0; c < ready_queue->count; c++) {
+        //找出時間為now時ready_queue中burst_time最小的Node
+        if (ready_queue->Data[cur].burst_time < min) {
+            min = ready_queue->Data[cur].burst_time;
+            best = cur;
+            best_prev = prev;
+        }
+        prev = cur;
+        cur++;
+    }
+
+    // 把best 放到queue 中front 的位置
+    //best不在queue裡front的位置
+    if (best != ready_queue->front) {
+        best_prev->next = best->next;
+        if (ready_queue->rear == best) ready_queue->rear = best_prev;
+        best->next = ready_queue->front;
+        ready_queue->front = best;
+    }
+    return dequeue_Array(ready_queue);
+}
+
 typedef Process* (*scheduler_func_LL)(Queue_LL *ready_queue, int now);
 typedef Process* (*scheduler_func_Array)(Queue_Array *ready_queue, int now);
 
