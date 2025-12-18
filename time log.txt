@@ -17,3 +17,4 @@
 114/12/16 修改npsjf_Array運作邏輯，新增swap_array與struct_copy兩函式操作array
 144/12/17 寫完preemptive SJF 
 114/12/18 完成Round robin
+114/12/18 修正npsjf_array
