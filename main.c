@@ -281,7 +281,7 @@ Process* schedule_psjf_LL(Queue_LL *ready_queue, int now){
 }
 
 Process* schedule_fcfs_Array(Queue_Array *ready_queue, int now){
-     return dequeue_Array(ready_queue);
+    return dequeue_Array(ready_queue);
 }
 
 Process* schedule_rr_Array(Queue_Array *ready_queue, int now) {
