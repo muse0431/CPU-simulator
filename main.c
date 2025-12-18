@@ -293,7 +293,33 @@ Process* schedule_rr_Array(Queue_Array *ready_queue, int now) {
     return dequeue_Array(ready_queue);
 }
 
-Process* schedule_psjf_Array(Queue_Array *ready_queue, int now){
+Process* schedule_psjf_Array(Queue_Array *ready_queue,int now){
+    if(is_empty_Array(ready_queue)) return NULL;
+
+    int cur_index = ready_queue->front;
+    int best_index = cur_index;
+    int min_remaining_time = ready_queue->Data[cur_index].remaining_time;
+
+    //找出時間為now時ready_queue中remaining_time最小的Process
+    for(int i = 1;i < ready_queue->count;i++){
+
+        if((cur_index + 1) % MAX == 0)
+            cur_index = -1;
+        
+        if(ready_queue->Data[cur_index + 1].remaining_time < min_remaining_time){
+            min_remaining_time = ready_queue->Data[cur_index + 1].remaining_time;
+            best_index = cur_index + 1;
+        }
+
+        cur_index++;
+    
+    }
+
+    // 把best 放到queue 中front 的位置
+    //best不在queue裡front的位置
+    if(best_index != ready_queue->front)
+        swap_array(&ready_queue->Data[best_index],&ready_queue->Data[ready_queue->front]);
+    
     return dequeue_Array(ready_queue);
 }
 
